@@ -1,0 +1,30 @@
+{
+  "name": "travel-sosmed-api",
+  "version": "0.0.0",
+  "description": "api services",
+  "main": "server.js",
+  "scripts": {
+    "dev": "nodemon ./src/server.js",
+    "lint": "eslint ./src --fix"
+  },
+  "keywords": [
+    "travel",
+    "sosmed"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/buryne/capstone-project"
+  },
+  "author": "team",
+  "license": "ISC",
+  "devDependencies": {
+    "eslint": "^8.54.0",
+    "nodemon": "^3.0.1",
+    "prettier": "^3.1.0"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "express-async-handler": "^1.2.0"
+  }
+}
