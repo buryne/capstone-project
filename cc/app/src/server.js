@@ -1,19 +1,22 @@
-const express = require("express");
-const handler = require("express-async-handler");
-const cors = require("cors");
+const express = require("express")
+const cors = require("cors")
+const routeRiders = require("./routes/route-riders")
 
-const app = express();
+const app = express()
+// eslint-disable-next-line no-undef
+const PORT = process.env.PORT || 3000
 
-app.use(cors());
-app.use(express.json());
+app.use(cors())
+app.use(express.json())
+app.use(express.urlencoded({ extended: true }))
 
-app.get(
-  "/",
-  handler(async (req, res) => {
-    res.send("Hello World").header("X-Hello", "World");
-  }),
-);
+app.get("/", (req, res) => {
+  res.header("X-Hello", "World")
+  res.send("Hello World")
+})
 
-app.listen(3000, () => {
-  console.log("Server running on port 3000");
-});
+app.use("/api", routeRiders)
+
+app.listen(PORT, () => {
+  console.log(`[⚡ server] Listening on url http://localhost:${PORT}`)
+})
