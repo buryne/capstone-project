@@ -1,10 +1,10 @@
-const asynchandler = require("express-async-handler")
-const db = require("../utils/firestore")
+const asynchandler = require('express-async-handler')
+const db = require('../utils/firestore')
 
 const getRiders = asynchandler(async (req, res) => {
   try {
     const { name } = req.query
-    let query = db.collection("f1Name")
+    const query = db.collection('f1Name')
 
     if (name) {
       // Menggunakan >= dan < untuk mencari data yang sebagian cocok dengan nama
@@ -50,13 +50,28 @@ const getRiders = asynchandler(async (req, res) => {
 
 const createRiders = asynchandler(async (req, res) => {
   try {
-    const { name, team, nation } = req.body
+    const { name, team, nation, posts } = req.body
 
-    const docRef = await db.collection("f1Name").add({
+    console.log('req.body', req.body)
+
+    if (!posts || !posts.length || !posts[0].title) {
+      console.log('title', posts[0].title)
+      // Handle the case where the title is not provided in the request body
+      return res.status(400).json({ error: 'Title is required.' })
+    }
+
+    const f1NameRequest = {
       name,
       team,
       nation,
-    })
+      posts: [
+        {
+          title: posts[0].title,
+        },
+      ],
+    }
+
+    const docRef = await db.collection('f1Name').add(f1NameRequest)
 
     const doc = await docRef.get()
     const data = doc.data()
@@ -69,11 +84,12 @@ const createRiders = asynchandler(async (req, res) => {
     res.status(500).json({ error: error.message })
   }
 })
+
 const updateRiderById = asynchandler(async (req, res) => {
   try {
     const { id } = req.params
 
-    const docRef = db.collection("f1Name").doc(id)
+    const docRef = db.collection('f1Name').doc(id)
     await docRef.update(req.body)
     const doc = await docRef.get()
     const data = doc.data()
