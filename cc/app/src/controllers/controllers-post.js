@@ -1,12 +1,13 @@
-import * as yup from 'yup'
-import asyncHandler from 'express-async-handler'
-import { db, firebase, storage } from '../utils/firebase'
+const yup = require('yup')
+const asyncHandler = require('express-async-handler')
+const { db, firebase, storage } = require('../utils/firebase.js')
 
-const collection = 'f1Name'
+const collection = 'users'
 
 const createPost = asyncHandler(async (req, res) => {
-  const userId = req.params.id
+  const userId = req.user.uid
   const postData = req.body
+  // const userId2 = req.user.id;
 
   try {
     // Ambil timestamp untuk pengaturan create_at dan update_at
@@ -29,9 +30,17 @@ const createPost = asyncHandler(async (req, res) => {
     // Dapatkan URL gambar setelah upload selesai
     const downloadURL = `https://storage.googleapis.com/${storage.name}/${fileName}`
 
+    const tags = req.body.tags
+      ? // eslint-disable-next-line operator-linebreak
+        req.body.tags.split(',').map((tag) => tag.trim())
+      : // eslint-disable-next-line operator-linebreak
+        []
+
     // Buat objek post dengan menambahkan URL gambar dan timestamp
     const postRequest = {
+      userId,
       ...postData,
+      tags,
       image: downloadURL,
       create_at: timestamp,
       update_at: timestamp,
@@ -49,88 +58,188 @@ const createPost = asyncHandler(async (req, res) => {
     // Validasi data post
     const validatedPost = await postSchema.validate(postRequest)
 
+    if (!userId) {
+      return res.status(400).json({ error: 'Invalid userId' })
+    }
+
+    const userQuery = await db
+      .collection(collection)
+      .where('uid', '==', userId)
+      .get()
+
+    if (userQuery.empty) {
+      // If the user does not exist, you might want to handle this case
+      return res.status(404).json({ error: 'User not found' })
+    }
+
+    // Retrieve the first document from the query result
+    const userDoc = userQuery.docs[0]
+
     // Dapatkan data pengguna yang ingin ditambahkan postingan
-    const userRef = db.collection(collection).doc(userId)
+    const userRef = db.collection(collection).doc(userDoc.id)
     const userSnapshot = await userRef.get()
     const userData = userSnapshot.data()
 
+    // Tambahkan post ke koleksi 'posts'
+    const postRef = await db.collection('posts').add(validatedPost)
+    const postId = postRef.id
+
     // Update pengguna dengan menambahkan ID post ke daftar postingan pengguna
     const updatedUserData = {
-      ...userData,
+      // ...userData,
       posts: [...userData.posts, postId],
     }
 
     // Simpan data pengguna yang diperbarui kembali ke Firestore
-    await userRef.set(updatedUserData)
+    await userRef.update(updatedUserData)
 
     // Kirim respons ke client
-    res.status(201).json({ id: postId, data: validatedPost })
+    // res.status(201).json({ id: postId, data: validatedPost })
+
+    res.render('post-created', { postId, data: validatedPost })
   } catch (error) {
     res.status(500).json({ message: 'Something Erorr', error: error.message })
   }
 })
 
-// ! OLD VERSION
-// const getAllPosts = asyncHandler(async (req, res) => {
-//   const { title, userId } = req.query
-
-//   try {
-//     const docRef = db.collection('posts')
-//     const snapshot = await docRef.get()
-
-//     const dataArray = snapshot.docs.map((doc) => ({
-//       id: doc.id,
-//       ...doc.data(),
-//     }))
-
-//     const result = dataArray.filter((item) => {
-//       const nameMatch = item.title.includes(title || '')
-//       const idMatch = item.id === userId || !userId
-//       return nameMatch && idMatch
-//     })
-
-//     res.status(200).json(result)
-//   } catch (error) {
-//     res.status(500).json({ error: error.message })
-//   }
-// })
-
-// ? NEW VERSION
-const getAllPosts = asyncHandler(async (req, res) => {
-  const { title, userId, tag } = req.query
-
+const getAllPostsView = asyncHandler(async (req, res) => {
   try {
-    // Membuat referensi ke koleksi 'posts'
-    const postsCollection = db.collection('posts')
-
-    // Membuat query dengan kondisi array-contains untuk mencari berdasarkan tag
-    let postsQuery = postsCollection
-    if (tag) {
-      postsQuery = postsQuery.where('tags', 'array-contains', tag)
-    }
-
-    // Menjalankan query dan mendapatkan snapshot
-    const postsSnapshot = await postsQuery.get()
-
-    // Mengubah snapshot menjadi array
+    // Fetch all posts
+    const postsSnapshot = await db.collection('posts').get()
     const postsData = postsSnapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
     }))
 
-    // Melakukan filter berdasarkan judul dan/atau ID pengguna
-    const filteredPosts = postsData.filter((post) => {
-      const titleMatch = post.title.includes(title || '')
-      const idMatch = post.id === userId || !userId
-      return titleMatch && idMatch
-    })
+    // Fetch user data for each post
+    const postsWithUserData = await Promise.all(
+      postsData.map(async (post) => {
+        const uid = post.userId
+        const userSnapshot = await db
+          .collection('users')
+          .where('uid', '==', uid)
+          .get()
 
-    // Mengirimkan hasil ke client
-    res.status(200).json(filteredPosts)
+        // Check if userSnapshot is not empty
+        if (userSnapshot.empty) {
+          console.log('User not found for post with userId:', uid)
+          return post // Return the post without user data
+        }
+
+        // Assume there's only one document in the snapshot
+        const userData = userSnapshot.docs[0].data()
+
+        // Combine post data with user data (excluding userId)
+        const postWithUserData = {
+          ...post,
+          user: {
+            displayName: userData.displayName,
+            email: userData.email,
+          },
+        }
+
+        // Remove userId property if it's present
+        delete postWithUserData.userId
+
+        return postWithUserData
+      }),
+    )
+
+    // Render the EJS template
+    res.render('allPosts', { posts: postsWithUserData })
   } catch (error) {
     res.status(500).json({ error: error.message })
   }
 })
+
+const getAllPosts = asyncHandler(async (req, res) => {
+  try {
+    // Fetch all posts
+    const postsSnapshot = await db.collection('posts').get()
+    const postsData = postsSnapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }))
+
+    // Fetch user data for each post
+    const postsWithUserData = await Promise.all(
+      postsData.map(async (post) => {
+        // Fetch user data based on userId
+        console.log('post', post.userId)
+        const uid = post.userId
+        const userSnapshot = await db
+          .collection('users')
+          .where('uid', '==', uid)
+          .get()
+
+        // Check if userSnapshot is not empty
+        if (userSnapshot.empty) {
+          console.log('User not found for post with userId:', uid)
+          return post // Return the post without user data
+        }
+
+        // Assume there's only one document in the snapshot
+        const userData = userSnapshot.docs[0].data()
+        console.log('userData', userData)
+
+        // Combine post data with user data (excluding userId)
+        const postWithUserData = {
+          ...post,
+          user: {
+            displayName: userData.displayName,
+            email: userData.email,
+          },
+        }
+
+        // Remove userId property if it's present
+        delete postWithUserData.userId
+
+        return postWithUserData
+      }),
+    )
+
+    res.status(200).json(postsWithUserData)
+  } catch (error) {
+    res.status(500).json({ error: error.message })
+  }
+})
+
+// ? NEW VERSION
+// const getAllPosts = asyncHandler(async (req, res) => {
+//   const { title, userId, tag } = req.query
+
+//   try {
+//     // Membuat referensi ke koleksi 'posts'
+//     const postsCollection = db.collection('posts')
+
+//     // Membuat query dengan kondisi array-contains untuk mencari berdasarkan tag
+//     let postsQuery = postsCollection
+//     if (tag) {
+//       postsQuery = postsQuery.where('tags', 'array-contains', tag)
+//     }
+
+//     // Menjalankan query dan mendapatkan snapshot
+//     const postsSnapshot = await postsQuery.get()
+
+//     // Mengubah snapshot menjadi array
+//     const postsData = postsSnapshot.docs.map((doc) => ({
+//       id: doc.id,
+//       ...doc.data(),
+//     }))
+
+//     // Melakukan filter berdasarkan judul dan/atau ID pengguna
+//     const filteredPosts = postsData.filter((post) => {
+//       const titleMatch = post.title.includes(title || '')
+//       const idMatch = post.id === userId || !userId
+//       return titleMatch && idMatch
+//     })
+
+//     // Mengirimkan hasil ke client
+//     res.status(200).json(filteredPosts)
+//   } catch (error) {
+//     res.status(500).json({ error: error.message })
+//   }
+// })
 
 const getPostById = asyncHandler(async (req, res) => {
   const postId = req.params.id
@@ -155,31 +264,71 @@ const getPostById = asyncHandler(async (req, res) => {
 })
 
 const updatePostById = asyncHandler(async (req, res) => {
+  const id = req.params.id
+  const userId = req.user.id
+
+  const { title, caption, tags, like } = req.body
+
   try {
-    // Ambil ID post dari parameter permintaan
-    const postId = req.params.id
+    // Membuat referensi ke dokumen post
+    const postRef = db.collection('posts').doc(id)
+    // Memeriksa kepemilikan postingan sebelum memperbarui
+    const postDoc = await postRef.get()
+    if (!postDoc.exists) {
+      return res.status(404).json({ error: 'Postingan tidak ditemukan' })
+    }
 
-    // Ambil data pembaruan dari tubuh permintaan
-    const { title, caption, tags, like } = req.body
+    // Mendapatkan pemilik postingan dari dokumen post
+    const postOwner = postDoc.data().userId
 
-    // Membuat objek postUpdate hanya dengan properti yang tidak undefined
+    if (postOwner !== userId) {
+      return res.status(403).json({
+        error: 'Anda tidak memiliki izin untuk memperbarui postingan ini',
+      })
+    }
+
+    // Jika pemilik diverifikasi, lanjutkan dengan pembaruan
+
+    const updateAt = firebase.firestore.Timestamp.fromDate(new Date())
+
+    // Membuat objek pembaruan post hanya dengan properti yang tidak undefined
     const postUpdate = {}
     if (title !== undefined) postUpdate.title = title
     if (caption !== undefined) postUpdate.caption = caption
     if (tags !== undefined) postUpdate.tags = tags
     if (like !== undefined) postUpdate.like = like
 
-    // Ambil timestamp untuk pengaturan update_at
-    const timestamp = firebase.firestore.Timestamp.fromDate(new Date())
+    // Check if a new file is provided
+    if (req.file) {
+      const file = req.file
+      const fileName = 'images/' + Date.now() + '_' + file.originalname
 
-    // Tambahkan properti update_at ke objek pembaruan post
-    postUpdate.update_at = timestamp
+      // Referensi ke file di storage
+      const fileRef = storage.file(fileName)
 
-    // Skema validasi untuk data post
+      // Simpan file ke storage
+      await fileRef.save(file.buffer, {
+        metadata: {
+          contentType: file.mimetype,
+        },
+      })
+
+      // Dapatkan URL gambar setelah upload selesai
+      const downloadURL = `https://storage.googleapis.com/${storage.name}/${fileName}`
+
+      // Update image property in the postRequest object
+      postUpdate.image = downloadURL
+    }
+
+    // eslint-disable-next-line camelcase
+    postUpdate.update_at = updateAt
+
+    // Validasi data post
     const postSchema = yup.object({
       title: yup.string().required(),
       caption: yup.string().required(),
       tags: yup.array().of(yup.string().required()).optional(),
+      image: yup.string().required(),
       like: yup.number().required().positive().integer(),
       update_at: yup.date().required(),
     })
@@ -187,18 +336,64 @@ const updatePostById = asyncHandler(async (req, res) => {
     // Validasi data post
     const validatedPost = await postSchema.validate(postUpdate)
 
-    // Membuat referensi ke dokumen post
-    const postRef = db.collection('posts').doc(postId)
-
     // Memperbarui dokumen post
     await postRef.update(validatedPost)
 
     // Mengirimkan hasil ke client
-    res.status(200).json({ id: postId, data: validatedPost })
+    res.status(200).json({ id, data: validatedPost })
+  } catch (error) {
+    res.status(500).json({ error: error.message })
+  }
+})
+
+const deletePostById = asyncHandler(async (req, res) => {
+  try {
+    // Ambil ID post dari parameter permintaan
+    const postId = req.params.id
+
+    // validate user id
+    const userId = req.user.id
+
+    if (!userId) {
+      return res.status(403).json({
+        error: 'Anda tidak memiliki izin untuk menghapus postingan ini',
+      })
+    }
+
+    // Membuat referensi ke dokumen post
+    const postRef = db.collection('posts').doc(postId)
+
+    const postDoc = await postRef.get()
+
+    if (!postDoc.exists) {
+      return res.status(404).json({ error: 'Postingan tidak ditemukan' })
+    }
+
+    // Mendapatkan pemilik postingan dari dokumen post
+    const postOwner = postDoc.data().userId
+
+    if (postOwner !== userId) {
+      return res.status(403).json({
+        error: 'Anda tidak memiliki izin untuk memperbarui postingan ini',
+      })
+    }
+
+    // Menghapus dokumen post
+    await postRef.delete()
+
+    // Mengirimkan hasil ke client
+    res.status(200).json({ id: postId })
   } catch (error) {
     // Tangani kesalahan dengan mengirim respons kesalahan
     res.status(500).json({ error: error.message })
   }
 })
 
-export { getAllPosts, createPost, getPostById, updatePostById }
+module.exports = {
+  getAllPosts,
+  createPost,
+  getPostById,
+  updatePostById,
+  deletePostById,
+  getAllPostsView,
+}

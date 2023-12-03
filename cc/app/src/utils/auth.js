@@ -1,20 +1,16 @@
 const passport = require('passport')
-const GoogleStrategy = require('passport-google-oauth20').Strategy
 const { db } = require('./firebase')
-
-const GOOGLE_CLIENT_ID =
-  '496333779224-20pfjin8ee57h6aflaj8lpci1r2tug1s.apps.googleusercontent.com'
-const GOOGLE_CLIENT_SECRET = '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'
-const callbackURL = 'http://localhost:5000/google/callback'
+const GoogleStrategy = require('passport-google-oauth20').Strategy
 
 passport.use(
   new GoogleStrategy(
     {
-      clientID: GOOGLE_CLIENT_ID,
-      clientSecret: GOOGLE_CLIENT_SECRET,
-      callbackURL: callbackURL,
+      clientID: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      callbackURL: process.env.CALLBACKURL,
     },
-    function (accessToken, refreshToken, profile, cb) {
+
+    (accessToken, refreshToken, profile, cb) => {
       console.log('Access Token: ', accessToken)
       console.log('Refresh Token: ', refreshToken)
       console.log('Profile: ', profile)
@@ -37,8 +33,8 @@ passport.use(
         .catch((error) => {
           cb(error, null)
         })
-    }
-  )
+    },
+  ),
 )
 
 // Serialisasi dan deserialisasi pengguna
@@ -46,13 +42,8 @@ passport.serializeUser((user, done) => {
   done(null, user)
 })
 
-// passport.deserializeUser((obj, done) => {
-//   console.log('Deserializing user: ', obj)
-//   done(null, obj)
-// })
-
 passport.deserializeUser(async (obj, done) => {
-  const userRef = db
+  return db
     .collection('users')
     .where('uid', '==', obj.id)
     .get()
@@ -68,6 +59,7 @@ passport.deserializeUser(async (obj, done) => {
     })
 })
 
+// eslint-disable-next-line require-jsdoc
 async function saveUserToFirestore(user) {
   const userRef = db.collection('users').where('uid', '==', user.uid)
 
@@ -80,5 +72,6 @@ async function saveUserToFirestore(user) {
 
   // Jika pengguna belum ada, simpan data pengguna ke Firestore
   await db.collection('users').add(user)
+
   return user
 }

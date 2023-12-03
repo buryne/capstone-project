@@ -2,118 +2,6 @@ const asynchandler = require('express-async-handler')
 const { admin, db, storage } = require('../utils/firestore')
 const { object, string, number, date, array } = require('yup')
 
-// ! OLD
-// eslint-disable-next-line no-unused-vars
-// const createUser = asynchandler(async (req, res) => {
-//   try {
-//     const { name, email, password, profileUrl } = req.body
-
-//     // create random id for user mix number and character use MATH
-
-//     // add timestamp to posts array object
-//     const timestamp = admin.firestore.Timestamp.fromDate(new Date())
-
-//     const userRequset = {
-//       name,
-//       email,
-//       password,
-//       profileUrl,
-//       posts: [],
-//       created: timestamp,
-//     }
-
-//     // if (!posts || !posts.length || !posts[0].title) {
-//     //   console.log('title', posts[0].title)
-//     //   // Handle the case where the title is not provided in the request body
-//     //   return res.status(400).json({ error: 'Title is required.' })
-//     // }
-
-//     const userSchema = object({
-//       name: string().required(),
-//       email: string().email(),
-//       password: number().required().positive().integer(),
-//       profileUrl: string().url().nullable(),
-//       posts: array()
-//         .of(
-//           object({
-//             title: string().required(),
-//             caption: string().required(),
-//             image: string().url().required(),
-//             tags: array().of(string().required()),
-//             like: number().required().positive().integer(),
-//             create_at: date(),
-//             update_at: date(),
-//           }),
-//         )
-//         .optional(),
-//     })
-
-//     const user = await userSchema.validate(userRequset)
-
-//     const docRef = await db.collection('f1Name').add(user)
-
-//     const doc = await docRef.get()
-//     const data = doc.data()
-
-//     res.status(201).json({
-//       id: doc.id,
-//       data,
-//     })
-//   } catch (error) {
-//     res.status(500).json({ error: error.message })
-//   }
-// })
-
-// ! OLD
-const uploadPosts = asynchandler(async (req, res) => {
-  const { id } = req.params
-  const { title, caption, tags, like } = req.body
-
-  // const userRequset = {
-  //   title,
-  //   caption,
-  //   image,
-  //   tags,
-  //   like,
-  // }
-
-  // ! NEW
-  const file = req.file // File gambar
-  const fileName = 'images/' + Date.now() + '_' + file.originalname
-
-  const fileRef = storage.file(fileName)
-
-  // Lakukan proses upload
-  await fileRef.save(file.buffer, {
-    metadata: {
-      contentType: file.mimetype,
-    },
-  })
-
-  // Dapatkan URL gambar setelah upload selesai
-  const downloadURL = `https://storage.googleapis.com/${storage.name}/${fileName}`
-
-  const userRequset = {
-    title,
-    caption,
-    image: downloadURL,
-    tags,
-    like,
-  }
-
-  const docRef = db.collection('f1Name').doc(id)
-  await docRef.update({
-    posts: admin.firestore.FieldValue.arrayUnion(userRequset),
-  })
-  const doc = await docRef.get()
-  const data = doc.data()
-
-  res.status(200).json({ id, data })
-
-  // update user
-})
-
-// ! NEW V2
 const createUser = asynchandler(async (req, res) => {
   try {
     const { name, email, password, profileUrl } = req.body
@@ -193,6 +81,7 @@ const getUsers = asynchandler(async (req, res) => {
   }
 })
 
+// Something new
 const createPost = asynchandler(async (req, res) => {
   try {
     const { id } = req.params
@@ -218,6 +107,7 @@ const createPost = asynchandler(async (req, res) => {
     const downloadURL = `https://storage.googleapis.com/${storage.name}/${fileName}`
 
     const postRequest = {
+      userId: id,
       title,
       caption,
       image: downloadURL,
@@ -327,24 +217,60 @@ const updateUserById = asynchandler(async (req, res) => {
 
 const updatePostById = asynchandler(async (req, res) => {
   const { id } = req.params
+  const userId = req.user.id
   const { title, caption, tags, like } = req.body
-  // 5djof1yycjx
-  const userRequset = {
-    title,
-    caption,
-    tags,
-    like,
+
+  try {
+    // Membuat referensi ke dokumen post
+    const postRef = db.collection('posts').doc(id)
+    // Memeriksa kepemilikan postingan sebelum memperbarui
+    const postDoc = await postRef.get()
+    if (!postDoc.exists) {
+      return res.status(404).json({ error: 'Postingan tidak ditemukan' })
+    }
+
+    // Mendapatkan pemilik postingan dari dokumen post
+    const postOwner = postDoc.data().userId
+
+    if (postOwner !== userId) {
+      return res.status(403).json({
+        error: 'Anda tidak memiliki izin untuk memperbarui postingan ini',
+      })
+    }
+
+    // Jika pemilik diverifikasi, lanjutkan dengan pembaruan
+    // eslint-disable-next-line camelcase
+    const update_at = admin.firestore.Timestamp.fromDate(new Date())
+
+    // Membuat objek pembaruan post hanya dengan properti yang tidak undefined
+    const postUpdate = {}
+    if (title !== undefined) postUpdate.title = title
+    if (caption !== undefined) postUpdate.caption = caption
+    if (tags !== undefined) postUpdate.tags = tags
+    if (like !== undefined) postUpdate.like = like
+    // eslint-disable-next-line camelcase
+    postUpdate.update_at = update_at
+
+    // Validasi data post
+    const postSchema = yup.object({
+      title: yup.string().required(),
+      caption: yup.string().required(),
+      tags: yup.array().of(yup.string().required()).optional(),
+      like: yup.number().required().positive().integer(),
+      update_at: yup.date().required(),
+    })
+
+    // Validasi data post
+    const validatedPost = await postSchema.validate(postUpdate)
+
+    // Memperbarui dokumen post
+    await postRef.update(validatedPost)
+
+    // Mengirimkan hasil ke client
+    res.status(200).json({ id, data: validatedPost })
+  } catch (error) {
+    res.status(500).json({ error: error.message })
   }
-
-  const docRef = db.collection('f1Name').where('posts.id', '==', id)
-
-  await docRef.update({
-    posts: admin.firestore.FieldValue.arrayUnion(userRequset),
-  })
-  const doc = await docRef.get()
-  const data = doc.data()
-
-  res.status(200).json({ id, data })
 })
 
 module.exports = {

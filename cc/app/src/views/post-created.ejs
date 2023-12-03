@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Post Created</title>
+    <style>
+      body {
+        font-family: 'Arial', sans-serif;
+        width: 50%;
+        margin: auto;
+        padding: 0;
+        background-color: #f4f4f4;
+      }
+    </style>
+  </head>
+  <body>
+    <%- include('header') %>
+    <h1>Post Created Successfully</h1>
+    <p>Post ID: <%= postId %></p>
+    <pre><%= JSON.stringify(data, null, 2) %></pre>
+  </body>
+</html>

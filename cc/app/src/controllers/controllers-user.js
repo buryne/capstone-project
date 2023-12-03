@@ -1,15 +1,15 @@
-import * as yup from 'yup'
-import asyncHandler from 'express-async-handler'
-import { db, firebase } from '../utils/firebase'
+const yup = require('yup')
+const asyncHandler = require('express-async-handler')
+const { db, firebase } = require('../utils/firebase.js')
 
-const collection = 'f1Name'
+const collection = 'users'
 
 const getAllUsers = asyncHandler(async (req, res) => {
   try {
     const { name, userId } = req.query
 
     // Membuat referensi ke koleksi 'f1Name'
-    const usersRef = db.collection('f1Name')
+    const usersRef = db.collection(collection)
 
     // Mengambil snapshot dari koleksi
     const snapshot = await usersRef.get()
@@ -22,7 +22,7 @@ const getAllUsers = asyncHandler(async (req, res) => {
 
     // Melakukan filter berdasarkan nama dan/atau ID pengguna
     const result = dataArray.filter((item) => {
-      const nameMatch = item.name.includes(name || '')
+      const nameMatch = item.displayName.includes(name || '')
       const idMatch = item.id === userId || !userId
       return nameMatch && idMatch
     })
@@ -81,7 +81,7 @@ const createUser = asyncHandler(async (req, res) => {
 // Function
 const getPostDetailsByUserId = async (userId) => {
   try {
-    const userRef = db.collection('f1Name').doc(userId)
+    const userRef = db.collection(collection).doc(userId)
     const userSnapshot = await userRef.get()
     const userData = userSnapshot.data()
 
@@ -113,7 +113,7 @@ const getPostDetailsByUserId = async (userId) => {
 }
 
 const getUserById = asyncHandler(async (req, res) => {
-  const userId = req.params.userId
+  const userId = req.params.id
 
   try {
     const userData = await getPostDetailsByUserId(userId)
@@ -133,7 +133,7 @@ const getUserById = asyncHandler(async (req, res) => {
 const updateUserById = asyncHandler(async (req, res) => {
   try {
     // Ambil ID pengguna dari parameter permintaan
-    const userId = req.params.userId
+    const userId = req.params.id
 
     // Ambil data pembaruan dari tubuh permintaan
     const { name, email, password, profileUrl } = req.body
@@ -194,4 +194,10 @@ const deleteUserById = asyncHandler(async (req, res) => {
   }
 })
 
-export { getAllUsers, createUser, getUserById, updateUserById, deleteUserById }
+module.exports = {
+  getAllUsers,
+  createUser,
+  getUserById,
+  updateUserById,
+  deleteUserById,
+}
