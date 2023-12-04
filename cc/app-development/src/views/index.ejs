@@ -1,0 +1,30 @@
+<!-- views/index.ejs -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jelajah Nusantara API</title>
+  <style>
+     body {
+      font-family: 'Arial', sans-serif;
+      width: 50%;
+      margin: auto;
+      padding: 0;
+      background-color: #f4f4f4;
+    }
+  </style>
+</head>
+<body>
+  <%- include('header') %>
+  <% if (isAuthenticated) { %>
+    <h1>Welcome, <%= isAuthenticated ? username : 'Guest' %>!</h1>
+    <p>This is the Jelajah Nusantara API.</p>
+    <!-- Other content for authenticated users -->
+  <% } else { %>
+    <h1>Welcome to Jelajah Nusantara API</h1>
+    <h3>Login first to post</h3>
+    <a href="/auth/google">Login With Google</a>
+  <% } %>
+</body>
+</html>

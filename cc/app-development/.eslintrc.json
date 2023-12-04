@@ -1,0 +1,20 @@
+{
+  "env": {
+    "browser": true,
+    "es2021": true
+  },
+  "plugins": ["import"],
+  "extends": "google",
+  "parserOptions": {
+    "ecmaVersion": "latest"
+  },
+  "rules": {
+    "new-cap": "off",
+    "semi": "off",
+    "indent": ["error", 2],
+    "object-curly-spacing": ["error", "always"],
+    "linebreak-style": ["error", "windows"],
+    "operator-linebreak": ["error", "before"],
+    "max-len": ["error", { "code": 120 }]
+  }
+}
