@@ -1,0 +1,6 @@
+runtime: nodejs18
+env_variables:
+  GOOGLE_CLIENT_ID: ${google_client_id}
+  GOOGLE_CLIENT_SECRET: ${google_client_secret}
+  CALLBACKURL: ${callback_url}
+  SECRET: ${secret}

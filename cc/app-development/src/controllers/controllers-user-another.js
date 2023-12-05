@@ -15,15 +15,10 @@ const getAllUsers = asyncHandler(async (req, res) => {
     const snapshot = await usersRef.get()
 
     // Mengubah snapshot menjadi array objek dengan properti id dan data
-    const dataArray = snapshot.docs.map((doc) => {
-      // eslint-disable-next-line no-unused-vars
-      const { accessToken, uid, ...data } = doc.data()
-
-      return {
-        id: doc.id,
-        ...data,
-      }
-    })
+    const dataArray = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }))
 
     // Melakukan filter berdasarkan nama dan/atau ID pengguna
     const result = dataArray.filter((item) => {
@@ -62,9 +57,11 @@ const getPostDetailsByUserId = async (userId) => {
 
     // Menggabungkan data pengguna dengan detail postingan
     return {
-      userId: userSnapshot.id,
-      ...userData,
-      posts: postDetails,
+      userData: {
+        userId: userSnapshot.id,
+        ...userData,
+        posts: postDetails,
+      },
     }
   } catch (error) {
     throw new Error(error.message)
@@ -78,7 +75,9 @@ const getUserById = asyncHandler(async (req, res) => {
     const userData = await getPostDetailsByUserId(userId)
 
     if (!userData) {
-      return res.status(404).json({ message: `User with id: ${userId} not found` })
+      return res
+        .status(404)
+        .json({ message: `User with id: ${userId} not found` })
     }
 
     res.status(200).json({ id: userId, data: userData })
@@ -99,7 +98,9 @@ const deleteUserById = asyncHandler(async (req, res) => {
 
     // Periksa apakah pengguna ditemukan
     if (!userData) {
-      return res.status(404).json({ message: `User with id: ${userId} not found` })
+      return res
+        .status(404)
+        .json({ message: `User with id: ${userId} not found` })
     }
 
     // Hapus dokumen pengguna

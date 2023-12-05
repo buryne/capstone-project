@@ -15,9 +15,9 @@ passport.use(
     },
 
     (accessToken, refreshToken, profile, cb) => {
-      console.log('Access Token: ', accessToken)
-      console.log('Refresh Token: ', refreshToken)
-      console.log('Profile: ', profile)
+      // console.log('Access Token: ', accessToken)
+      // console.log('Refresh Token: ', refreshToken)
+      // console.log('Profile: ', profile)
 
       const user = {
         uid: profile.id,
