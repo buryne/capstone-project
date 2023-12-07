@@ -124,3 +124,19 @@ model.save("Recommendation_Systems_Model.h5")
 # Download the model
 from google.colab import files
 files.download("Recommendation_Systems_Model.h5")
+
+# Save model .pkl
+import joblib
+
+model_filename = "Recommendation_Systems_Model.pkl"
+joblib.dump(model, model_filename)
+print(f"Model saved as {model_filename}")
+
+# Evaluate the model
+loss, accuracy = model.evaluate(tfidf_matrix.toarray(), tfidf_matrix.toarray())
+print(f'Model Loss: {loss}, Model Accuracy: {accuracy}')
+
+from google.colab import files
+
+# Download the model file
+files.download(model_filename)
