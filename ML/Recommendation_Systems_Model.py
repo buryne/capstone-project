@@ -63,6 +63,12 @@ indices = pd.Series(df_wisata.index, index=df_wisata["Place_Name"]).drop_duplica
 
 
 def rekomendasi_tempat_wisata(Place_Name, cosine_sim=cosine_sim):
+    """
+
+    :param Place_Name: 
+    :param cosine_sim:  (Default value = cosine_sim)
+
+    """
     # Get the index of the destination that matches the Place_Name
     idx = indices[Place_Name]
 
@@ -94,7 +100,14 @@ train_data, test_data = train_test_split(df_wisata, test_size=0.2, random_state=
 
 
 class myCallback(tf.keras.callbacks.Callback):
+    """ """
     def on_epoch_end(self, epoch, logs={}):
+        """
+
+        :param epoch: 
+        :param logs:  (Default value = {})
+
+        """
         # Check the loss
         if logs.get("accuracy") > 0.98:
             # Stop if threshold is met
