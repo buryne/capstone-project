@@ -1,16 +1,17 @@
-from tensorflow.keras.callbacks import EarlyStopping
+from io import StringIO
+
 import joblib
-from google.colab import files
-from sklearn.metrics.pairwise import linear_kernel
-from tensorflow.keras.layers import Dense, Embedding, Flatten
-from tensorflow.keras.models import Sequential
-import tensorflow as tf
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.model_selection import train_test_split
 import numpy as np
 import pandas as pd
 import requests
-from io import StringIO
+import tensorflow as tf
+from google.colab import files
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import linear_kernel
+from sklearn.model_selection import train_test_split
+from tensorflow.keras.callbacks import EarlyStopping
+from tensorflow.keras.layers import Dense, Embedding, Flatten
+from tensorflow.keras.models import Sequential
 
 # URL raw file in GitHub
 github_url = "https://raw.githubusercontent.com/tsnrrohmah/Recommendation-Systems-Content-Based-Filtering/master/Dataset/cleaned_dataset_wisata.csv"
