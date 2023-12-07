@@ -10,7 +10,9 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import linear_kernel
 from sklearn.model_selection import train_test_split
 from tensorflow.keras.callbacks import EarlyStopping
-from tensorflow.keras.layers import Dense, Embedding, Flatten
+from tensorflow.keras.layers import Dense
+from tensorflow.keras.layers import Embedding
+from tensorflow.keras.layers import Flatten
 from tensorflow.keras.models import Sequential
 
 # URL raw file in GitHub
