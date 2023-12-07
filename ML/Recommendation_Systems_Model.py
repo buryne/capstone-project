@@ -67,7 +67,7 @@ indices = pd.Series(df_wisata.index, index=df_wisata["Place_Name"]).drop_duplica
 def rekomendasi_tempat_wisata(Place_Name, cosine_sim=cosine_sim):
     """
 
-    :param Place_Name: 
+    :param Place_Name:
     :param cosine_sim:  (Default value = cosine_sim)
 
     """
@@ -106,7 +106,7 @@ class myCallback(tf.keras.callbacks.Callback):
     def on_epoch_end(self, epoch, logs={}):
         """
 
-        :param epoch: 
+        :param epoch:
         :param logs:  (Default value = {})
 
         """
