@@ -38,16 +38,16 @@ df_wisata.shape
 print(df_wisata.info())
 
 
-df_wisata['City'].head(5)
+df_wisata["City"].head(5)
 
 # Define a TF-IDF Vectorizer Object
-tfidf = TfidfVectorizer(stop_words='english')
+tfidf = TfidfVectorizer(stop_words="english")
 
 # Replace NaN with an empty string
-df_wisata['City'] = df_wisata['City'].fillna('')
+df_wisata["City"] = df_wisata["City"].fillna("")
 
 # Construct the required TF-IDF matrix by fitting and transforming the data
-tfidf_matrix = tfidf.fit_transform(df_wisata['City'])
+tfidf_matrix = tfidf.fit_transform(df_wisata["City"])
 
 # Output the shape of tfidf_matrix
 tfidf_matrix.shape
@@ -58,8 +58,7 @@ tfidf_matrix.shape
 cosine_sim = linear_kernel(tfidf_matrix, tfidf_matrix)
 
 # Construct a reverse map of indices and Place_Name
-indices = pd.Series(
-    df_wisata.index, index=df_wisata['Place_Name']).drop_duplicates()
+indices = pd.Series(df_wisata.index, index=df_wisata["Place_Name"]).drop_duplicates()
 
 
 def rekomendasi_tempat_wisata(Place_Name, cosine_sim=cosine_sim):
@@ -70,8 +69,7 @@ def rekomendasi_tempat_wisata(Place_Name, cosine_sim=cosine_sim):
     similarity_scores = list(enumerate(cosine_sim[idx]))
 
     # Sort the destinations based on the similarity scores
-    similarity_scores = sorted(
-        similarity_scores, key=lambda x: x[1], reverse=True)
+    similarity_scores = sorted(similarity_scores, key=lambda x: x[1], reverse=True)
 
     # Get the scores of the 15 most similar destinations
     similarity_scores = similarity_scores[1:16]
@@ -81,23 +79,23 @@ def rekomendasi_tempat_wisata(Place_Name, cosine_sim=cosine_sim):
 
     # Exclude the input Place_Name from the recommendations
     similar_places_indices = [
-        i for i in similar_places_indices if df_wisata['Place_Name'].iloc[i] != Place_Name]
+        i
+        for i in similar_places_indices
+        if df_wisata["Place_Name"].iloc[i] != Place_Name
+    ]
 
     # Return the most similar destinations (Place_Name and City)
-    return df_wisata[['Place_Name', 'City']].iloc[similar_places_indices]
+    return df_wisata[["Place_Name", "City"]].iloc[similar_places_indices]
 
 
 # Split the data into training and testing sets
-train_data, test_data = train_test_split(
-    df_wisata, test_size=0.2, random_state=42)
+train_data, test_data = train_test_split(df_wisata, test_size=0.2, random_state=42)
 
 
 class myCallback(tf.keras.callbacks.Callback):
     def on_epoch_end(self, epoch, logs={}):
-
         # Check the loss
-        if (logs.get('accuracy') > 0.98):
-
+        if logs.get("accuracy") > 0.98:
             # Stop if threshold is met
             print("\nAccuracy is higher than 0.98 so canceling training!")
             self.model.stop_training = True
@@ -107,26 +105,31 @@ callbacks = myCallback()
 
 # Define the model
 model = Sequential()
-model.add(Dense(64, input_shape=(tfidf_matrix.shape[1],), activation='relu'))
-model.add(Dense(32, activation='relu'))
-model.add(Dense(16, activation='relu'))
-model.add(Dense(tfidf_matrix.shape[1], activation='linear'))
+model.add(Dense(64, input_shape=(tfidf_matrix.shape[1],), activation="relu"))
+model.add(Dense(32, activation="relu"))
+model.add(Dense(16, activation="relu"))
+model.add(Dense(tfidf_matrix.shape[1], activation="linear"))
 
 # Compile the model
-model.compile(optimizer=tf.optimizers.Adam(), loss='mse', metrics=['accuracy'])
+model.compile(optimizer=tf.optimizers.Adam(), loss="mse", metrics=["accuracy"])
 
 # Train the model
-model.fit(tfidf_matrix.toarray(), tfidf_matrix.toarray(), epochs=10,
-          batch_size=32, validation_split=0.2, callbacks=[callbacks])
+model.fit(
+    tfidf_matrix.toarray(),
+    tfidf_matrix.toarray(),
+    epochs=10,
+    batch_size=32,
+    validation_split=0.2,
+    callbacks=[callbacks],
+)
 
 # Evaluate the model
 loss, accuracy = model.evaluate(tfidf_matrix.toarray(), tfidf_matrix.toarray())
-print(f'Model Loss: {loss}, Model Accuracy: {accuracy}')
+print(f"Model Loss: {loss}, Model Accuracy: {accuracy}")
 
 # Validation using rekomendasi_tempat_wisata function
-validation_result = rekomendasi_tempat_wisata(
-    'Taman Mini Indonesia Indah (TMII)')
-print('Rekomendasi tempat wisata :')
+validation_result = rekomendasi_tempat_wisata("Taman Mini Indonesia Indah (TMII)")
+print("Rekomendasi tempat wisata :")
 print(validation_result)
 
 # Save model .h5
@@ -143,7 +146,7 @@ print(f"Model saved as {model_filename}")
 
 # Evaluate the model
 loss, accuracy = model.evaluate(tfidf_matrix.toarray(), tfidf_matrix.toarray())
-print(f'Model Loss: {loss}, Model Accuracy: {accuracy}')
+print(f"Model Loss: {loss}, Model Accuracy: {accuracy}")
 
 
 # Download the model file
