@@ -46,6 +46,7 @@ const createPost = asyncHandler(async (req, res) => {
     // Validasi objek post menggunakan skema
     const postSchema = yup.object({
       title: yup.string().required(),
+      location: yup.string().required(),
       caption: yup.string().required(),
       image: yup.string().url().required(),
       tags: yup.array().of(yup.string().required()).optional(),
@@ -297,6 +298,7 @@ const updatePostById = asyncHandler(async (req, res) => {
     const postSchema = yup.object({
       title: yup.string().required(),
       caption: yup.string().required(),
+      location: yup.string().required(),
       tags: yup.array().of(yup.string().required()).optional(),
       image: yup.string().required(),
       like: yup.number().required().positive().integer(),

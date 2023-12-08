@@ -2,7 +2,7 @@ const express = require('express')
 const cors = require('cors')
 const dotenv = require('dotenv')
 const morgan = require('morgan')
-// ! OFF FEATURE
+// ! OFF
 // const path = require('path')
 const passport = require('passport')
 const session = require('express-session')
@@ -19,11 +19,11 @@ app.use(cors())
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use(morgan('dev'))
-app.use(session({ secret: 'cats' }))
+app.use(session({ secret: process.env.SECRET, saveUninitialized: true, resave: true }))
 app.use(passport.initialize())
 app.use(passport.session({ pauseStream: true }))
 
-// ! OFF FEATURE
+// ! OFF
 // app.set('view engine', 'ejs')
 // app.set('views', path.join(__dirname, 'views'))
 
@@ -53,15 +53,12 @@ app.get('/', async (req, res) => {
   }
 })
 
-app.get(
-  '/auth/google',
-  passport.authenticate('google', { scope: ['profile', 'email'] }),
-)
+app.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }))
 
 app.get(
   '/google/callback',
   passport.authenticate('google', {
-    successRedirect: '/profile',
+    successRedirect: '/',
     failureRedirect: '/auth/google/failure',
   }),
 )
@@ -86,8 +83,7 @@ app.all('*', (req, res) => {
   res.status(404).json({
     error: {
       code: 404,
-      message:
-        'Endpoint not found. Please contact the developer for assistance.',
+      message: 'Endpoint not found. Please contact the developer for assistance.',
     },
   })
 })
