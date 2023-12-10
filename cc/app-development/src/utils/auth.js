@@ -1,6 +1,9 @@
 const passport = require('passport')
+const dotenv = require('dotenv')
 const { db } = require('./firebase')
 const GoogleStrategy = require('passport-google-oauth20').Strategy
+
+dotenv.config()
 
 const GOOGLE_CLIENT_ID = 'your client id'
 const GOOGLE_CLIENT_SECRET = 'your client secret'

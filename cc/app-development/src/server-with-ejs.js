@@ -6,11 +6,13 @@ const path = require('path')
 const passport = require('passport')
 const session = require('express-session')
 const routerUser = require('./routes/router-user')
-const routerPost = require('./routes/router-post')
+const routerPost = require('./routes/router-post-ejs')
 const {
   createPost,
   getAllPostsView,
-} = require('./controllers/controllers-post')
+  getEditPostView,
+  editPost,
+} = require('./controllers/controllers-post-ejs')
 const upload = require('./utils/multer')
 require('./utils/auth')
 
@@ -69,14 +71,9 @@ app.get('/create-post', isLoggedIn, (req, res) => {
 })
 
 app.post('/create-post', isLoggedIn, upload.single('image'), createPost)
-
-app.get('/allPosts', isLoggedIn, getAllPostsView)
-
-app.get(
-  '/auth/google',
-  passport.authenticate('google', { scope: ['profile', 'email'] }),
-)
-
+// Route to display all posts
+app.get('/allPosts', getAllPostsView)
+app.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }))
 app.get(
   '/google/callback',
   passport.authenticate('google', {
@@ -88,15 +85,19 @@ app.get(
 app.get('/auth/google/failure', (req, res) => {
   res.send('Failed to authenticate..')
 })
-
 app.get('/profile', isLoggedIn, (req, res) => {
   const username = req.user.displayName
-
-  res.render('profile', { username })
+  const photoURL = req.user.photoURL
+  res.render('profile', { username, photoURL })
 })
 
+// Route to display the edit form for a specific post
+app.get('/edit-post/:postId', isLoggedIn, getEditPostView)
+
+// Route to handle the form submission when editing a post
+app.post('/edit-post/:postId', isLoggedIn, upload.single('image'), editPost)
+
 app.get('/logout', (req, res) => {
-  req.session = null
   req.logout()
   res.redirect('/')
 })
@@ -104,8 +105,6 @@ app.get('/logout', (req, res) => {
 app.all('*', (req, res) => {
   res.status(404).json({ message: 'Endpoint not found' })
 })
-
-// app.post('/create-post', upload.single('image'), createPost)
 
 app.listen(PORT, () => {
   console.log(`[⚡ server] Listening on url http://localhost:${PORT}`)
