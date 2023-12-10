@@ -1,0 +1,88 @@
+<!-- allPosts.ejs -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>All Posts</title>
+
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      width: 50%;
+      margin: auto;
+      padding: 0;
+      background-color: #f4f4f4;
+    }
+
+    h1 {
+      color: #333;
+    }
+
+    .card {
+      background-color: #fff;
+      border: 1px solid #ddd;
+      margin-bottom: 20px;
+      padding: 20px;
+      border-radius: 5px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+
+
+    h2 {
+      color: #333;
+    }
+
+    p {
+      color: #666;
+    }
+
+    img {
+      max-width: 100%;
+      height: auto;
+    }
+    .post-by {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      margin-right: 10px;
+    }
+    .parent-post-user {
+      display: flex;
+      align-items: center;
+      padding: 10px 0;
+      p {
+        color: #8d8b8b;
+      }
+    }
+  </style>
+</head>
+<body>
+    <%- include('header') %>
+  <h1>All Posts</h1>
+
+  <% posts.forEach(post => { %>
+    <div class="card">
+      <h2><%= post.title %></h2>
+      <p><%= post.caption %></p>
+      <div class="parent-post-user">
+        <img class="post-by" src="<%= post.user.photoURL %>" alt="Post Image">
+        <p>Posted by <%= post.user.displayName %></p>
+      </div>
+      <img src="<%= post.image %>" alt="Post Image">
+      <p>Tags: <%= post.tags.join(', ') %></p>
+      <p>Location: <%= post.location %></p>
+      <p>Created at: <%= post.create_at.toDate().toLocaleDateString() %></p>
+      <p>Updated at: <%= post.update_at.toDate().toLocaleDateString() %></p>
+      <!-- Edit if user login-->
+      <% if (loggedInUser && post.user.uid === loggedInUser.uid) { %>
+        <!-- Display edit button only for the posts created by the logged-in user -->
+        <a href="/edit-post/<%= post.id %>">Edit</a>
+      <% } %>
+    </div>
+  <% }); %>
+
+</body>
+</html>

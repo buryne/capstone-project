@@ -4,6 +4,7 @@ const { db, firebase, storage } = require('../utils/firebase.js')
 
 const collection = 'users'
 
+// ! OFF FEATURE
 const createPost = asyncHandler(async (req, res) => {
   const userId = req.user.uid
   const postData = req.body
