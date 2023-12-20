@@ -1,0 +1,8 @@
+node_modules/
+node_modules
+.env
+.env-2
+serviceAccountKey.json
+jelajah-nusantara-dev.json
+# serviceAccountKey.json dont upload github
+
