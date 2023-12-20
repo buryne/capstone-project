@@ -1,7 +1,7 @@
 const express = require("express");
 const morgan = require("morgan");
 const cors = require("cors");
-const {db} = require("./utils/firebase");
+const { db } = require("./utils/firebase");
 
 const app = express();
 
@@ -13,12 +13,12 @@ app.use(morgan("dev"));
 
 app.get("/", (req, res) => {
   res.status(200).json({
-    message : "Hello World!",
+    message: "Hello World!",
   });
 });
 
 app.get("/api/wisata", async (req, res) => {
-  const {limit, city, category} = req.query;
+  const { limit, city, category } = req.query;
   const limits = Number(limit) || 10; // Fixed variable name here
 
   let query = db.collection("tempat-wisata").limit(limits);
@@ -36,7 +36,7 @@ app.get("/api/wisata", async (req, res) => {
 
   const wisata = wisataAllSnapshot.docs.map((doc) => {
     return {
-      id : doc.id,
+      id: doc.id,
       ...doc.data(),
     };
   });
@@ -56,7 +56,7 @@ app.get("/api/wisata/:place_id", async (req, res) => {
 
   wisataAll.forEach((doc) => {
     wisata.push({
-      id : doc.id,
+      id: doc.id,
       ...doc.data(),
     });
   });
