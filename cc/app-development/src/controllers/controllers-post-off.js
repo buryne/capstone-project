@@ -4,7 +4,6 @@ const { db, firebase, storage } = require('../utils/firebase.js')
 
 const collection = 'users'
 
-// ! OFF FEATURE
 const createPost = asyncHandler(async (req, res) => {
   const userId = req.user.uid
   const postData = req.body
@@ -30,7 +29,9 @@ const createPost = asyncHandler(async (req, res) => {
     // Dapatkan URL gambar setelah upload selesai
     const downloadURL = `https://storage.googleapis.com/${storage.name}/${fileName}`
 
-    const tags = req.body.tags ? req.body.tags.split(',').map((tag) => tag.trim()) : []
+    const tags = req.body.tags
+      ? req.body.tags.split(',').map((tag) => tag.trim())
+      : []
 
     // Buat objek post dengan menambahkan URL gambar dan timestamp
     const postRequest = {
@@ -49,6 +50,7 @@ const createPost = asyncHandler(async (req, res) => {
       caption: yup.string().required(),
       image: yup.string().url().required(),
       tags: yup.array().of(yup.string().required()).optional(),
+      like: yup.number().required().positive().integer(),
     })
 
     // Validasi data post
@@ -58,7 +60,10 @@ const createPost = asyncHandler(async (req, res) => {
       return res.status(400).json({ error: 'Invalid userId' })
     }
 
-    const userQuery = await db.collection(collection).where('uid', '==', userId).get()
+    const userQuery = await db
+      .collection(collection)
+      .where('uid', '==', userId)
+      .get()
 
     if (userQuery.empty) {
       // If the user does not exist, you might want to handle this case
@@ -92,8 +97,9 @@ const createPost = asyncHandler(async (req, res) => {
     }
 
     // Kirim respons ke client
+    res.status(201).json(postResult)
 
-    res.render('post-created', { postId, data: postResult })
+    // res.render('post-created', { postId, data: validatedPost })
   } catch (error) {
     res.status(500).json({ message: 'Something Erorr', error: error.message })
   }
@@ -112,7 +118,10 @@ const getAllPostsView = asyncHandler(async (req, res) => {
     const postsWithUserData = await Promise.all(
       postsData.map(async (post) => {
         const uid = post.userId
-        const userSnapshot = await db.collection('users').where('uid', '==', uid).get()
+        const userSnapshot = await db
+          .collection('users')
+          .where('uid', '==', uid)
+          .get()
 
         // Check if userSnapshot is not empty
         if (userSnapshot.empty) {
@@ -127,7 +136,6 @@ const getAllPostsView = asyncHandler(async (req, res) => {
           displayName: userData.displayName,
           email: userData.email,
           photoURL: userData.photoURL,
-          uid: userData.uid,
         }
 
         // Combine post data with user data (excluding userId)
@@ -143,17 +151,8 @@ const getAllPostsView = asyncHandler(async (req, res) => {
       }),
     )
 
-    const sortedPosts = postsWithUserData.sort(
-      (a, b) => b.create_at.toDate() - a.create_at.toDate(),
-    )
-
-    console.log({
-      posts: postsWithUserData,
-      loggedInUser: req.user,
-    })
-
     // Render the EJS template
-    res.render('allPosts', { posts: sortedPosts, loggedInUser: req.user })
+    res.render('allPosts', { posts: postsWithUserData })
   } catch (error) {
     res.status(500).json({ error: error.message })
   }
@@ -174,7 +173,10 @@ const getAllPosts = asyncHandler(async (req, res) => {
         // Fetch user data based on userId
         console.log('post', post.userId)
         const uid = post.userId
-        const userSnapshot = await db.collection('users').where('uid', '==', uid).get()
+        const userSnapshot = await db
+          .collection('users')
+          .where('uid', '==', uid)
+          .get()
 
         // Check if userSnapshot is not empty
         if (userSnapshot.empty) {
@@ -210,103 +212,24 @@ const getAllPosts = asyncHandler(async (req, res) => {
   }
 })
 
-// const getPostById = asyncHandler(async (req, res) => {
-//   const postId = req.params.id
+const getPostById = asyncHandler(async (req, res) => {
+  const postId = req.params.id
 
-//   try {
-//     // Membuat referensi ke dokumen post
-//     const postRef = db.collection('posts').doc(postId)
-
-//     // Mendapatkan snapshot dari dokumen post
-//     const postSnapshot = await postRef.get()
-
-//     // Mengubah snapshot menjadi objek
-//     const postData = {
-//       id: postSnapshot.id,
-//       ...postSnapshot.data(),
-//     }
-
-//     res.status(200).json(postData)
-//   } catch (error) {
-//     res.status(500).json({ error: error.message })
-//   }
-// })
-
-const getPostById = async (postId) => {
-  const postDoc = await db.collection('posts').doc(postId).get()
-
-  if (!postDoc.exists) {
-    return null
-  }
-
-  return {
-    id: postDoc.id,
-    ...postDoc.data(),
-  }
-}
-
-const getEditPostView = asyncHandler(async (req, res) => {
   try {
-    const postId = req.params.postId
-    const post = await getPostById(postId)
+    // Membuat referensi ke dokumen post
+    const postRef = db.collection('posts').doc(postId)
 
-    if (!post || post.userId !== req.user.uid) {
-      return res.status(403).send('You do not have permission to edit this post.')
+    // Mendapatkan snapshot dari dokumen post
+    const postSnapshot = await postRef.get()
+
+    // Mengubah snapshot menjadi objek
+    const postData = {
+      id: postSnapshot.id,
+      ...postSnapshot.data(),
     }
 
-    res.render('editPost', { post })
+    res.status(200).json(postData)
   } catch (error) {
-    res.status(500).json({ error: error.message })
-  }
-})
-
-// Function to handle the form submission when editing a post
-const editPost = asyncHandler(async (req, res) => {
-  try {
-    const postId = req.params.postId
-    const post = await getPostById(postId)
-
-    if (!post || post.userId !== req.user.uid) {
-      return res.status(403).send('You do not have permission to edit this post.')
-    }
-
-    const tags = req.body.tags ? req.body.tags.split(',').map((tag) => tag.trim()) : []
-    const updatedAt = firebase.firestore.Timestamp.fromDate(new Date())
-    let imageUrl = post.image // Default to the existing image URL
-
-    if (req.file) {
-      if (post.image) {
-        const previousFileName = post.image.split('/').pop() // Extract file name from URL
-        const previousFileRef = storage.file('images/' + previousFileName)
-        await previousFileRef.delete()
-      }
-      const file = req.file
-      const fileName = 'images/' + Date.now() + '_' + file.originalname
-
-      // Upload the file to storage
-      const fileRef = storage.file(fileName)
-      await fileRef.save(file.buffer, { metadata: { contentType: file.mimetype } })
-
-      // Get the URL of the uploaded image with a cache-busting parameter
-      imageUrl = `https://storage.googleapis.com/${storage.name}/${fileName}`
-      console.log('New Image URL:', imageUrl)
-    }
-
-    const updatedPostData = {
-      title: req.body.title,
-      caption: req.body.caption,
-      tags,
-      updatedAt,
-      image: imageUrl, // Updated image URL
-      // Update other fields as needed
-    }
-
-    await db.collection('posts').doc(postId).update(updatedPostData)
-
-    console.log('Post updated successfully')
-    res.redirect('/allPosts')
-  } catch (error) {
-    console.error('Error updating post:', error.message)
     res.status(500).json({ error: error.message })
   }
 })
@@ -481,6 +404,4 @@ module.exports = {
   updatePostById,
   deletePostById,
   getAllPostsView,
-  editPost,
-  getEditPostView,
 }
