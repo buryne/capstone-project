@@ -4,6 +4,7 @@
   "description": "Services ResfulAPI",
   "main": "server.js",
   "scripts": {
+    "node": "node ./src/server.js",
     "dev": "nodemon ./src/server.js",
     "dev-ejs": "nodemon ./src/server-with-ejs.js",
     "lint": "eslint ./src --fix",
