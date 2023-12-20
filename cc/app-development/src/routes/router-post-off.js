@@ -5,7 +5,7 @@ const {
   updatePostById,
   deletePostById,
   createPost,
-} = require('../controllers/controllers-post-ejs')
+} = require('../controllers/controllers-post-off')
 const upload = require('../utils/multer')
 
 const router = express.Router()

@@ -2,9 +2,9 @@ const express = require('express')
 const {
   getAllPosts,
   getPostById,
-  updatePostById,
-  deletePostById,
   createPost,
+  updatePost,
+  deletePostById,
 } = require('../controllers/controllers-post')
 const upload = require('../utils/multer')
 
@@ -14,7 +14,7 @@ router
   .get('/', getAllPosts)
   .get('/:id', getPostById)
   .post('/', upload.single('image'), createPost)
-  .patch('/:id', updatePostById)
+  .patch('/:id', updatePost)
   .delete('/:id', deletePostById)
 
 module.exports = router
