@@ -5,9 +5,7 @@ from io import StringIO
 import numpy as np
 import pandas as pd
 import requests
-from flask import Flask
-from flask import jsonify
-from flask import request
+from flask import Flask, jsonify, request
 from keras.models import load_model
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import linear_kernel
