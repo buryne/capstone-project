@@ -6,7 +6,8 @@ firebase.initializeApp({
   storageBucket: 'gs://casptone-api-cc-ch2-ps352.appspot.com',
 })
 
+const auth = firebase.auth()
 const db = firebase.firestore()
 const storage = firebase.storage().bucket()
 
-module.exports = { db, storage, firebase }
+module.exports = { db, storage, firebase, auth }

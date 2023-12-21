@@ -1,8 +1,35 @@
 const asyncHandler = require('express-async-handler')
-const { db } = require('../utils/firebase.js')
+const { db, auth } = require('../utils/firebase.js')
+const { saveUserToFirestore } = require('../utils/auth.js')
+const bcrypt = require('bcrypt')
+
 // const yup = require('yup')
 
 const collection = 'users'
+
+const registerUser = asyncHandler(async (req, res) => {
+  const hashedPassword = await bcrypt.hash(req.body.password, 10)
+
+  try {
+    const users = await auth.createUser({
+      email: req.body.email,
+      password: req.body.password,
+      emailVerified: false,
+      disabled: false,
+    })
+
+    const userResult = await saveUserToFirestore({
+      uid: users.uid,
+      email: users.email,
+      password: hashedPassword,
+      posts: [],
+    })
+
+    res.status(200).json(userResult)
+  } catch (error) {
+    res.status(500).json({ error: error.message })
+  }
+})
 
 const getAllUsers = asyncHandler(async (req, res) => {
   try {
@@ -124,4 +151,5 @@ module.exports = {
   getAllUsers,
   getUserById,
   deleteUserById,
+  registerUser,
 }

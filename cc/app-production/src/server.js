@@ -10,6 +10,8 @@ const routerPost = require('./routes/router-post')
 const googleAuthRoutes = require('./routes/google-auth-routes')
 const ejsRouterPost = require('./routes/router-post-ejs')
 const ejsRouterUser = require('./routes/router-user-ejs')
+const { registerUser } = require('./controllers/controllers-user')
+const authVerify = require('./middleware/authVerify')
 require('./utils/auth')
 
 const app = express()
@@ -28,7 +30,7 @@ app.set('view engine', 'ejs')
 app.set('views', path.join(__dirname, 'views'))
 
 app.use('/api/users', routerUser)
-app.use('/api/posts', routerPost)
+app.use('/api/posts', authVerify, routerPost)
 app.use('/auth/google', googleAuthRoutes)
 app.use(ejsRouterPost)
 app.use(ejsRouterUser)
@@ -47,6 +49,8 @@ app.get('/', async (req, res) => {
     res.status(500).json({ error: error.message })
   }
 })
+
+app.use('/register', registerUser)
 
 app.get('/logout', (req, res) => {
   req.logout((err) => {
