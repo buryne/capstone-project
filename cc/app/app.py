@@ -85,7 +85,7 @@ def predict():
     def get_recommendations_with_load_model(model, city="City", num_recommendations=10):
         """
 
-        :param model: 
+        :param model:
         :param city:  (Default value = "City")
         :param num_recommendations:  (Default value = 10)
 
