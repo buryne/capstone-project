@@ -1,6 +1,0 @@
-node_modules/
-node_modules
-.env
-serviceAccountKey.json
-# serviceAccountKey.json dont upload github
-
