@@ -18,17 +18,20 @@ model = load_model('Recommendation_Model_FIXED.h5')
 Github_url_1 = "https://raw.githubusercontent.com/buryne/capstone-project/app-dev/ML/dataset/Dataset_wisata.csv"
 External_api_url = 'https://api-wisata-dot-api-beta-testing.uc.r.appspot.com/api/wisata'
 
-#Mendapatkan konten file CSV dari Github
+# Mendapatkan konten file CSV dari Github
 response = requests.get(Github_url_1)
 data = StringIO(response.text)
 
 wisata = pd.read_csv(data)
 
+
 @app.route("/")
 def helloWorld():
-    return jsonify({ "message": "Hello API Predict Janu"})
+    return jsonify({"message": "Hello API Predict Janu"})
 
 # Assuming 'id_user' is the user ID
+
+
 @app.route("/janu-recomend/predict", methods=["GET"])
 def predict():
     # Dapatkan nilai parameter 'name' dari URL
@@ -43,9 +46,11 @@ def predict():
 
     city = np.array([city_name for i in range(len(data_wisata))])
 
-    city_label_mapping = {'Jakarta': 0, 'Yogyakarta': 1, 'Bandung': 2, 'Semarang': 3, 'Surabaya': 4}
+    city_label_mapping = {'Jakarta': 0, 'Yogyakarta': 1,
+                          'Bandung': 2, 'Semarang': 3, 'Surabaya': 4}
 
-    city_encoded = np.array([city_label_mapping[city_name] for city_name in city])
+    city_encoded = np.array([city_label_mapping[city_name]
+                            for city_name in city])
 
     input_data = np.column_stack((city_encoded, data_wisata))
 
@@ -80,27 +85,31 @@ def predict():
         random_place_features = city_data.loc[random_place_index, 'Place_Name']
 
         # Transform the random place features using the TF-IDF vectorizer
-        random_place_tfidf = tfidf_vectorizer.transform([random_place_features])
+        random_place_tfidf = tfidf_vectorizer.transform(
+            [random_place_features])
 
         # Calculate cosine similarity between the random place and all tourist places in the same city
-        cosine_similarities = linear_kernel(random_place_tfidf, tfidf_matrix[city_data.index, :]).flatten()
+        cosine_similarities = linear_kernel(
+            random_place_tfidf, tfidf_matrix[city_data.index, :]).flatten()
 
         # Get indices of similar tourist places based on cosine similarity scores
-        similar_places_indices = cosine_similarities.argsort()[:-num_recommendations-1:-1]
+        similar_places_indices = cosine_similarities.argsort()[
+            :-num_recommendations-1:-1]
 
         # Return the most similar destinations (Place_Name and City)
         # return city_data[['Place_Name', 'City']].iloc[similar_places_indices]
-        return city_data[['Place_Id', 'Place_Name','Description', 'Category', 'City', 'Price', 'Rating']].iloc[similar_places_indices]
+        return city_data[['Place_Id', 'Place_Name', 'Description', 'Category', 'City', 'Price', 'Rating']].iloc[similar_places_indices]
 
     # Mendapatkan rekomendasi dengan menggunakan model yang telah diload
-    recommendations_by_city_loaded_model = get_recommendations_with_load_model(model, city_name)
+    recommendations_by_city_loaded_model = get_recommendations_with_load_model(
+        model, city_name)
 
-    results_city = recommendations_by_city_loaded_model.to_dict(orient='records')
-
-    
+    results_city = recommendations_by_city_loaded_model.to_dict(
+        orient='records')
 
     # Kembalikan hasil pencarian
     return jsonify(recommendations_by_city_loaded_model.to_dict(orient='records'))
+
 
 if __name__ == '__main__':
     app.run(debug=True, port=8080)
