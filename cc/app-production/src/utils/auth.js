@@ -68,17 +68,21 @@ passport.deserializeUser(async (obj, done) => {
 
 // eslint-disable-next-line require-jsdoc
 async function saveUserToFirestore(user) {
-  const userRef = db.collection('users').where('uid', '==', user.uid)
+  // const userRef = db.collection('users').where('uid', '==', user.uid)
 
-  const userQuerySnapshot = await userRef.get()
+  // const userQuerySnapshot = await userRef.get()
 
-  // Jika pengguna sudah ada, kembalikan data pengguna yang sudah ada
-  if (!userQuerySnapshot.empty) {
-    return null
-  }
+  // // Jika pengguna sudah ada, kembalikan data pengguna yang sudah ada
+  // if (!userQuerySnapshot.empty) {
+  //   return null
+  // }
 
   // Jika pengguna belum ada, simpan data pengguna ke Firestore
   await db.collection('users').add(user)
 
   return user
+}
+
+module.exports = {
+  saveUserToFirestore,
 }

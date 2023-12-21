@@ -17,6 +17,7 @@ const COLLECTION_POST = 'posts'
 const createPost = asyncHandler(async (req, res) => {
   try {
     const userId = req.user.uid
+    console.log('userId', userId)
     const postData = req.body
     const file = req.file
 
@@ -35,6 +36,7 @@ const createPost = asyncHandler(async (req, res) => {
     }
 
     await validatePost(postRequest)
+
 
     const userDoc = await getUserDocument(userId)
 
@@ -58,6 +60,7 @@ const createPost = asyncHandler(async (req, res) => {
 // * API to get all post
 const getAllPosts = asyncHandler(async (req, res) => {
   try {
+    console.log(req.headers.authorization)
     const postsSnapshot = await db.collection(COLLECTION_POST).get()
     const postsData = postsSnapshot.docs.map((doc) => ({
       id: doc.id,

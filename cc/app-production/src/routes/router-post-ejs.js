@@ -6,7 +6,6 @@ const {
   createPost,
 } = require('../controllers/controllers-post-ejs')
 const upload = require('../utils/multer')
-const { getAllUsers } = require('../controllers/controllers-user-ejs')
 const { getUserDocByUid } = require('../services/user-action')
 
 const router = express.Router()

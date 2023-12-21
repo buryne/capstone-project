@@ -6,7 +6,6 @@
   "scripts": {
     "node": "node ./src/server.js",
     "dev": "nodemon ./src/server.js",
-    "dev-ejs": "nodemon ./src/server-with-ejs.js",
     "lint": "eslint ./src --fix",
     "format": "prettier --write ./src"
   },
@@ -18,6 +17,7 @@
   "license": "ISC",
   "dependencies": {
     "@firebase/storage": "^0.12.0",
+    "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "ejs": "^3.1.9",
