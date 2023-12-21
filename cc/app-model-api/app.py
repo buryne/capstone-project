@@ -28,6 +28,7 @@ wisata = pd.read_csv(data)
 
 @app.route("/")
 def helloWorld():
+    """ """
     return jsonify({"message": "Hello API Predict Janu"})
 
 
@@ -36,6 +37,7 @@ def helloWorld():
 
 @app.route("/janu-recomend/predict", methods=["GET"])
 def predict():
+    """ """
     # Dapatkan nilai parameter 'name' dari URL
     name = request.args.get("name")
 
@@ -79,6 +81,13 @@ def predict():
 
     # Mendapatkan rekomendasi menggunakan model yang telah diload
     def get_recommendations_with_load_model(model, city="City", num_recommendations=10):
+        """
+
+        :param model: 
+        :param city:  (Default value = "City")
+        :param num_recommendations:  (Default value = 10)
+
+        """
         # Filter data for the specified city
         city_data = wisata[wisata["City"] == city]
 
