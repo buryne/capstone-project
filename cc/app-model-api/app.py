@@ -1,13 +1,14 @@
-import os
 import json
+import os
+from io import StringIO
+
 import numpy as np
-from keras.models import load_model
-from flask import Flask, jsonify, request
 import pandas as pd
+import requests
+from flask import Flask, jsonify, request
+from keras.models import load_model
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import linear_kernel
-from io import StringIO
-import requests
 
 app = Flask(__name__)
 
