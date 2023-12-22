@@ -1,4 +1,4 @@
-![logo-app](https://github.com/buryne/capstone-project/blob/main/logo/WhatsApp%20Image%202023-12-21%20at%2011.46.05.jpeg)
+![logo-app](https://github.com/buryne/capstone-project/blob/main/logo/logo.jpeg)
 
 # Jelajah Nusantara ( Janu )
 
