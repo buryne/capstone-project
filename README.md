@@ -1,8 +1,4 @@
-# Capstone Project
-
-Welcome Capstone Project
-- [Progress](https://github.com/users/buryne/projects/5)
-
+![logo-app](https://github.com/buryne/capstone-project/blob/main/logo/WhatsApp%20Image%202023-12-21%20at%2011.46.05.jpeg)
 
 # Jelajah Nusantara ( Janu )
 
