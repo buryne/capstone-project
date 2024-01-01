@@ -29,7 +29,6 @@ Indonesia is a country that is glorious for its tourism potential with a variety
 
 # Product
 1. [Janu Apps](https://github.com/buryne/capstone-project/blob/main/MD/app-final/JelajahNusantara.zip)
-2. [Web Services](https://capstone-project-api-ch2-ps352.et.r.appspot.com/web)
 
 # Technology Used
 1. Machine Laearning
@@ -45,7 +44,7 @@ Indonesia is a country that is glorious for its tourism potential with a variety
    - Google Cloud Storage
     
 # API Documentation
-link RESTful API [Janu]()
+link RESTful API [Janu](https://buryne.github.io/capstone-api-docs/)
 
 
 
